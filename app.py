@@ -63,17 +63,36 @@ def calculate_coverage(machine_width, machine_speed, field_length, turn_around_t
 
 st.title('Carbon Implement Coverage Calculator')
 
-# Initialize session state
-if 'results' not in st.session_state:
-    st.session_state.results = None
+# Initialize session state with default values
+if 'machine_width' not in st.session_state:
+    st.session_state.machine_width = 20.0  # Default in feet
+if 'machine_speed' not in st.session_state:
+    st.session_state.machine_speed = 0.75  # Default in mph
+if 'field_length' not in st.session_state:
+    st.session_state.field_length = 2000.0  # Default in feet
+if 'turn_around_time' not in st.session_state:
+    st.session_state.turn_around_time = 2.0
+if 'operational_hours_per_day' not in st.session_state:
+    st.session_state.operational_hours_per_day = 8.0
+if 'operational_days_per_week' not in st.session_state:
+    st.session_state.operational_days_per_week = 5
 
 # Add toggle for metric/imperial
 is_metric = st.checkbox('Use Metric Units')
 
-# Create two columns
-col1, col2 = st.columns(2)
+# Force initial calculation of results
+if 'results' not in st.session_state:
+    st.session_state.results = calculate_coverage(
+        st.session_state.machine_width,
+        st.session_state.machine_speed,
+        st.session_state.field_length,
+        st.session_state.turn_around_time,
+        st.session_state.operational_hours_per_day,
+        st.session_state.operational_days_per_week,
+        is_metric
+    )
 
-# Define a function to update results
+# Function to update results
 def update_results():
     st.session_state.results = calculate_coverage(
         st.session_state.machine_width,
@@ -103,13 +122,16 @@ def display_results():
             st.write(f"- Total Turnarounds per Week: {st.session_state.results['total_turnarounds_per_week']}")
             st.write(f"- Total Time per Week Spent Turning Around: {st.session_state.results['time_spent_turning_around_per_week']} hours")
 
+# Create two columns
+col1, col2 = st.columns(2)
+
 # Inputs in the first column
 with col1:
     st.header(f'Inputs ({"Metric" if is_metric else "Imperial"})')
     st.number_input('Machine Width (meters)' if is_metric else 'Machine Width (feet)',
                     value=20.0 if not is_metric else 6.1,
-                    step=0.1,
-                    min_value=0.0,
+                    step=20.0,
+                    min_value=20.0,
                     key='machine_width',
                     on_change=update_results)
     st.number_input('Machine Speed (km/h)' if is_metric else 'Machine Speed (mph)',
@@ -123,12 +145,6 @@ with col1:
                     step=10.0,
                     min_value=0.0,
                     key='field_length',
-                    on_change=update_results)
-    st.number_input('Turn Around Time (minutes)',
-                    value=0.0,
-                    step=0.5,
-                    min_value=0.0,
-                    key='turn_around_time',
                     on_change=update_results)
     st.number_input('Operational Hours per Day',
                     value=8.0,
@@ -148,6 +164,12 @@ with col1:
 # Outputs in the second column
 with col2:
     display_results()
+    st.number_input('Turn Around Time (minutes)',
+                    value=0.0,
+                    step=0.5,
+                    min_value=0.0,
+                    key='turn_around_time',
+                    on_change=update_results)
 
 # Initial calculation to display default values
 update_results()
