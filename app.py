@@ -61,7 +61,7 @@ def calculate_coverage(machine_width, machine_speed, field_length, turn_around_t
         'total_hours_per_week': round(total_hours_per_week, 2),
     }
 
-st.title('Carbon Implement Coverage Calculator')
+st.title('Carbon Coverage Calculator')
 
 # Initialize session state with default values in imperial units
 if 'is_metric' not in st.session_state:
