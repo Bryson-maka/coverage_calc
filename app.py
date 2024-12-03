@@ -63,13 +63,15 @@ def calculate_coverage(machine_width, machine_speed, field_length, turn_around_t
 
 st.title('Carbon Implement Coverage Calculator')
 
-# Initialize session state with default values
-if 'machine_width' not in st.session_state:
-    st.session_state.machine_width = 20.0  # Default in feet
-if 'machine_speed' not in st.session_state:
-    st.session_state.machine_speed = 0.75  # Default in mph
-if 'field_length' not in st.session_state:
-    st.session_state.field_length = 2000.0  # Default in feet
+# Initialize session state with default values in imperial units
+if 'is_metric' not in st.session_state:
+    st.session_state.is_metric = False
+if 'machine_width_imperial' not in st.session_state:
+    st.session_state.machine_width_imperial = 20.0
+if 'machine_speed_imperial' not in st.session_state:
+    st.session_state.machine_speed_imperial = 0.75
+if 'field_length_imperial' not in st.session_state:
+    st.session_state.field_length_imperial = 2000.0
 if 'turn_around_time' not in st.session_state:
     st.session_state.turn_around_time = 2.0
 if 'operational_hours_per_day' not in st.session_state:
@@ -77,32 +79,49 @@ if 'operational_hours_per_day' not in st.session_state:
 if 'operational_days_per_week' not in st.session_state:
     st.session_state.operational_days_per_week = 5
 
-# Add toggle for metric/imperial
-is_metric = st.checkbox('Use Metric Units')
+# Function to handle metric toggle
+def on_metric_toggle():
+    st.session_state.is_metric = not st.session_state.is_metric
+    update_results()
 
-# Force initial calculation of results
-if 'results' not in st.session_state:
-    st.session_state.results = calculate_coverage(
-        st.session_state.machine_width,
-        st.session_state.machine_speed,
-        st.session_state.field_length,
-        st.session_state.turn_around_time,
-        st.session_state.operational_hours_per_day,
-        st.session_state.operational_days_per_week,
-        is_metric
-    )
+# Add toggle for metric/imperial
+is_metric = st.checkbox('Use Metric Units', value=st.session_state.is_metric, on_change=on_metric_toggle)
 
 # Function to update results
 def update_results():
+    # Get the current values based on unit system
+    if st.session_state.is_metric:
+        machine_width = st.session_state.machine_width_imperial * 0.3048
+        machine_speed = st.session_state.machine_speed_imperial * 1.60934
+        field_length = st.session_state.field_length_imperial * 0.3048
+    else:
+        machine_width = st.session_state.machine_width_imperial
+        machine_speed = st.session_state.machine_speed_imperial
+        field_length = st.session_state.field_length_imperial
+
     st.session_state.results = calculate_coverage(
-        st.session_state.machine_width,
-        st.session_state.machine_speed,
-        st.session_state.field_length,
+        machine_width,
+        machine_speed,
+        field_length,
         st.session_state.turn_around_time,
         st.session_state.operational_hours_per_day,
         st.session_state.operational_days_per_week,
-        is_metric
+        st.session_state.is_metric
     )
+
+# Function to handle input changes
+def on_input_change():
+    # Store values in imperial and update results
+    if st.session_state.is_metric:
+        st.session_state.machine_width_imperial = meters_to_feet(st.session_state.machine_width)
+        st.session_state.machine_speed_imperial = kmh_to_mph(st.session_state.machine_speed)
+        st.session_state.field_length_imperial = meters_to_feet(st.session_state.field_length)
+    else:
+        st.session_state.machine_width_imperial = st.session_state.machine_width
+        st.session_state.machine_speed_imperial = st.session_state.machine_speed
+        st.session_state.field_length_imperial = st.session_state.field_length
+    
+    update_results()
 
 # Function to display results
 def display_results():
@@ -125,36 +144,50 @@ def display_results():
 # Create two columns
 col1, col2 = st.columns(2)
 
+# Calculate displayed values based on current unit system
+displayed_machine_width = (
+    feet_to_meters(st.session_state.machine_width_imperial) if is_metric 
+    else st.session_state.machine_width_imperial
+)
+displayed_machine_speed = (
+    mph_to_kmh(st.session_state.machine_speed_imperial) if is_metric 
+    else st.session_state.machine_speed_imperial
+)
+displayed_field_length = (
+    feet_to_meters(st.session_state.field_length_imperial) if is_metric 
+    else st.session_state.field_length_imperial
+)
+
 # Inputs in the first column
 with col1:
     st.header(f'Inputs ({"Metric" if is_metric else "Imperial"})')
     st.number_input('Machine Width (meters)' if is_metric else 'Machine Width (feet)',
-                    value=20.0 if not is_metric else 6.1,
-                    step=0.1,  # Changed from 20.0 to 0.1 for more precise control
-                    min_value=6.6 if not is_metric else 2.0,  # Changed from 20.0 to 6.6 feet
+                    value=displayed_machine_width,
+                    step=0.1,
+                    min_value=2 if not is_metric else 2.0,
                     key='machine_width',
-                    on_change=update_results)
+                    on_change=on_input_change)
     st.number_input('Machine Speed (km/h)' if is_metric else 'Machine Speed (mph)',
-                    value=0.75 if not is_metric else 1.2,
+                    value=displayed_machine_speed,
                     step=0.05,
                     min_value=0.0,
                     key='machine_speed',
-                    on_change=update_results)
+                    on_change=on_input_change)
     st.number_input('Field Length (meters)' if is_metric else 'Field Length (feet)',
-                    value=2000.0 if not is_metric else 609.6,
+                    value=displayed_field_length,
                     step=10.0,
                     min_value=0.0,
                     key='field_length',
-                    on_change=update_results)
+                    on_change=on_input_change)
     st.number_input('Operational Hours per Day',
-                    value=8.0,
+                    value=st.session_state.operational_hours_per_day,
                     step=0.5,
                     min_value=0.0,
                     max_value=24.0,
                     key='operational_hours_per_day',
                     on_change=update_results)
     st.number_input('Operational Days per Week',
-                    value=5,
+                    value=st.session_state.operational_days_per_week,
                     step=1,
                     min_value=0,
                     max_value=7,
@@ -165,11 +198,12 @@ with col1:
 with col2:
     display_results()
     st.number_input('Turn Around Time (minutes)',
-                    value=0.0,
+                    value=st.session_state.turn_around_time,
                     step=0.5,
                     min_value=0.0,
                     key='turn_around_time',
                     on_change=update_results)
 
 # Initial calculation to display default values
-update_results()
+if 'results' not in st.session_state:
+    update_results()
