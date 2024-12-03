@@ -63,6 +63,10 @@ def calculate_coverage(machine_width, machine_speed, field_length, turn_around_t
 
 st.title('Carbon Coverage Calculator')
 
+# Add this to the initialization block at the beginning, with the other session state initializations
+if 'results' not in st.session_state:
+    st.session_state.results = None
+
 # Initialize session state with default values in imperial units
 if 'is_metric' not in st.session_state:
     st.session_state.is_metric = False
@@ -123,9 +127,9 @@ def on_input_change():
     
     update_results()
 
-# Function to display results
+# And modify the display_results function to handle None values more gracefully
 def display_results():
-    if st.session_state.results:
+    if hasattr(st.session_state, 'results') and st.session_state.results is not None:
         st.header(f"Outputs ({'Metric' if is_metric else 'Imperial'})")
         st.write(f"- Machine Coverage per Hour: {st.session_state.results['coverage_per_hour']} {'hectares' if is_metric else 'acres'}")
         st.write(f"- Machine Coverage per Day: {st.session_state.results['coverage_per_day']} {'hectares' if is_metric else 'acres'}")
