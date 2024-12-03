@@ -211,3 +211,6 @@ with col2:
 # Initial calculation to display default values
 if 'results' not in st.session_state:
     update_results()
+
+# Initial calculation to display default values
+update_results()
