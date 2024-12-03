@@ -164,7 +164,7 @@ with col1:
     st.number_input('Machine Width (meters)' if is_metric else 'Machine Width (feet)',
                     value=displayed_machine_width,
                     step=0.1,
-                    min_value=2 if not is_metric else 2.0,
+                    min_value=2.0 if not is_metric else 2.0,
                     key='machine_width',
                     on_change=on_input_change)
     st.number_input('Machine Speed (km/h)' if is_metric else 'Machine Speed (mph)',
