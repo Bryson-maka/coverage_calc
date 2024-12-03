@@ -130,8 +130,8 @@ with col1:
     st.header(f'Inputs ({"Metric" if is_metric else "Imperial"})')
     st.number_input('Machine Width (meters)' if is_metric else 'Machine Width (feet)',
                     value=20.0 if not is_metric else 6.1,
-                    step=20.0,
-                    min_value=20.0,
+                    step=0.1,  # Changed from 20.0 to 0.1 for more precise control
+                    min_value=6.6 if not is_metric else 2.0,  # Changed from 20.0 to 6.6 feet
                     key='machine_width',
                     on_change=update_results)
     st.number_input('Machine Speed (km/h)' if is_metric else 'Machine Speed (mph)',
